@@ -1,0 +1,39 @@
+CREATE TABLE Accounts (
+    account_id INT PRIMARY KEY,
+    account_type VARCHAR(20),
+    balance INT
+);
+CREATE TABLE Employees (
+    emp_id INT PRIMARY KEY,
+    department VARCHAR(50),
+    salary INT
+);
+INSERT INTO Accounts VALUES (1, 'savings', 5000);
+INSERT INTO Accounts VALUES (2, 'savings', 10000);
+INSERT INTO Accounts VALUES (3, 'current', 8000);
+INSERT INTO Employees VALUES (101, 'IT', 30000);
+INSERT INTO Employees VALUES (102, 'HR', 40000);
+INSERT INTO Employees VALUES (103, 'IT', 35000);
+DELIMITER //
+CREATE PROCEDURE TransferFunds(
+    IN from_acc INT,
+    IN to_acc INT,
+    IN amount INT
+)
+BEGIN
+    IF (SELECT balance FROM Accounts WHERE account_id = from_acc) < amount THEN
+        SELECT 'Insufficient balance' AS message;
+    ELSE
+        UPDATE Accounts
+        SET balance = balance - amount
+        WHERE account_id = from_acc;
+
+        UPDATE Accounts
+        SET balance = balance + amount
+        WHERE account_id = to_acc;
+
+        SELECT 'Transfer successful' AS message;
+    END IF;
+END//
+DELIMITER ;
+CALL TransferFunds(1, 2, 1000);

@@ -1,0 +1,36 @@
+CREATE TABLE customers (
+    customer_id INT,
+    age INT,
+    balance INT,
+    loan_interest_rate INT
+);
+INSERT INTO customers VALUES (101, 65, 15000, 8);
+INSERT INTO customers VALUES (102, 45, 8000, 9);
+CREATE TABLE loans (
+    loan_id INT,
+    customer_id INT,
+    due_date DATE
+);
+INSERT INTO loans VALUES (201, 101, CURDATE() + INTERVAL 10 DAY);
+INSERT INTO loans VALUES (202, 102, CURDATE() + INTERVAL 40 DAY);
+SELECT 
+    customer_id,
+    age,
+    CASE 
+        WHEN age > 60 THEN loan_interest_rate - 1
+        ELSE loan_interest_rate
+    END AS new_interest_rate
+FROM customers;
+SELECT 
+    customer_id,
+    CASE 
+        WHEN balance > 10000 THEN 'TRUE'
+        ELSE 'FALSE'
+    END AS IsVIP
+FROM customers;
+SELECT 
+    loan_id,
+    customer_id,
+    due_date
+FROM loans
+WHERE due_date BETWEEN CURDATE() AND CURDATE() + INTERVAL 30 DAY;

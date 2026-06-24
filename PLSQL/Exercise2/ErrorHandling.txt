@@ -1,0 +1,83 @@
+CREATE TABLE Accounts (
+    account_id INT PRIMARY KEY,
+    balance INT
+);
+CREATE TABLE Employees (
+    emp_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    salary INT
+);
+CREATE TABLE Customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+INSERT INTO Accounts VALUES (1, 5000);
+INSERT INTO Accounts VALUES (2, 2000);
+INSERT INTO Employees VALUES (101, 'Krish', 30000);
+INSERT INTO Employees VALUES (102, 'Skanda', 40000);
+INSERT INTO Customers VALUES (201, 'Durga');
+DELIMITER //
+CREATE PROCEDURE SafeTransferFunds(
+    IN from_acc INT,
+    IN to_acc INT,
+    IN amount INT
+)
+BEGIN
+    DECLARE insufficient_balance CONDITION FOR SQLSTATE '45000';
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Error occurred. Transaction rolled back.' AS message;
+    END;
+    START TRANSACTION;
+    IF (SELECT balance FROM Accounts WHERE account_id = from_acc) < amount THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Insufficient funds';
+    END IF;
+    UPDATE Accounts
+    SET balance = balance - amount
+    WHERE account_id = from_acc;
+    UPDATE Accounts
+    SET balance = balance + amount
+    WHERE account_id = to_acc;
+    COMMIT;
+    SELECT 'Transfer successful' AS message;
+END//
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE UpdateSalary(
+    IN emp INT,
+    IN percent INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR NOT FOUND
+    BEGIN
+        SELECT 'Employee ID not found' AS message;
+    END;
+    UPDATE Employees
+    SET salary = salary + (salary * percent / 100)
+    WHERE emp_id = emp;
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Employee does not exist';
+    END IF;
+    SELECT 'Salary updated successfully' AS message;
+END//
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE AddNewCustomer(
+    IN cid INT,
+    IN cname VARCHAR(50)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR 1062
+    BEGIN
+        SELECT 'Customer already exists (Duplicate ID)' AS message;
+    END;
+    INSERT INTO Customers VALUES (cid, cname);
+    SELECT 'Customer added successfully' AS message;
+END//
+DELIMITER ;
+CALL SafeTransferFunds(1, 2, 1000);
+CALL UpdateSalary(101, 10);
+CALL AddNewCustomer(203, 'Bob');

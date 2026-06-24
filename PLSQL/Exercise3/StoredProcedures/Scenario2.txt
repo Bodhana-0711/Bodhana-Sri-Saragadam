@@ -1,0 +1,30 @@
+CREATE TABLE Accounts (
+    account_id INT PRIMARY KEY,
+    account_type VARCHAR(20),
+    balance INT
+);
+CREATE TABLE Employees (
+    emp_id INT PRIMARY KEY,
+    department VARCHAR(50),
+    salary INT
+);
+INSERT INTO Accounts VALUES (1, 'savings', 5000);
+INSERT INTO Accounts VALUES (2, 'savings', 10000);
+INSERT INTO Accounts VALUES (3, 'current', 8000);
+INSERT INTO Employees VALUES (101, 'IT', 30000);
+INSERT INTO Employees VALUES (102, 'HR', 40000);
+INSERT INTO Employees VALUES (103, 'IT', 35000);
+DELIMITER //
+CREATE PROCEDURE UpdateEmployeeBonus(
+    IN dept VARCHAR(50),
+    IN bonus_percent INT
+)
+BEGIN
+    UPDATE Employees
+    SET salary = salary + (salary * bonus_percent / 100)
+    WHERE department = dept;
+
+    SELECT 'Bonus updated successfully' AS message;
+END//
+DELIMITER ;
+CALL UpdateEmployeeBonus('IT', 10);
